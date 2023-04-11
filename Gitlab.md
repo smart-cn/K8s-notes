@@ -1,8 +1,8 @@
-# gitlab-in-k8s
+# Gitlab-in-k8s
 
 Typical commands that might be useful when installing Gitlab on a K8s cluster (local, in my case)
 
-***Add helm repo abd create namespace:***
+***Add helm repo and create namespace:***
 
     helm repo add gitlab https://charts.gitlab.io/
     helm repo update  
