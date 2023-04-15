@@ -1,4 +1,4 @@
-# Velero&Restic-k8s
+# Velero&Restic-in-k8s
 
 Typical commands that might be useful when installing Velero with Restic on a K8s cluster (local, in my case)
 
@@ -60,12 +60,43 @@ Typical commands that might be useful when installing Velero with Restic on a K8
     }
     EOF
 
+***Policy for the Minio server:***
+
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:GetObject",
+                    "s3:DeleteObject",
+                    "s3:PutObject",
+                    "s3:AbortMultipartUpload",
+                    "s3:ListMultipartUploadParts"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::k8s-backups-home/*"
+                ]
+            },
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Resource": [
+                    "arn:aws:s3:::k8s-backups-home"
+                ]
+            }
+        ]
+    }
+
 ***Attach the policy to the user:***
 
     aws iam put-user-policy \
       --user-name velero \
       --policy-name velero \
       --policy-document file://velero-policy.json
+
 ***Create an access key for the user:***
 
     aws iam create-access-key --user-name velero
@@ -82,7 +113,7 @@ Typical commands that might be useful when installing Velero with Restic on a K8
       }
     }
 
-***Create S3 credentials file (.s3-creds or .minio-creds) in a local directory with such format:***
+***Create S3 credentials file (".s3-creds" or ".minio-creds" or ".minio-k8s-creds") in a local directory with such format:***
 
     [default]
     aws_access_key_id=*******<AWS_SECRET_ACCESS_KEY>*******
@@ -111,6 +142,18 @@ Typical commands that might be useful when installing Velero with Restic on a K8
         --secret-file ~/.minio-creds \
         --use-restic \
         --backup-location-config region=default,s3ForcePathStyle="true",s3Url="http://***************.site"
+	
+***Another option - use Minio server on the same K8s cluster (not recommended):***
+
+    velero install \
+        --image velero/velero:v1.9.6 \
+        --provider aws \
+        --plugins velero/velero-plugin-for-aws:v1.6.0 \
+        --bucket k8s-backups-home \
+        --use-volume-snapshots=false \
+        --secret-file ~/.minio-k8s-creds \
+        --use-restic \
+        --backup-location-config region=default,s3ForcePathStyle="true",s3Url="http://minio.minio.svc.cluster.local:9000"
 
 ***Create backup ("jenkins-home") of the namespace ("jenkins" in my case) with persistent data:***
 
@@ -135,5 +178,3 @@ Typical commands that might be useful when installing Velero with Restic on a K8
 ***Uninstall Velero from the K8s cluster:***
 
     velero uninstall
-
-
