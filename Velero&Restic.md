@@ -128,6 +128,12 @@ Typical commands that might be useful when installing Velero with Restic on a K8
 
     velero backup create k8s-backups-home --default-volumes-to-restic --wait
 
-***Sync S3 storage to tge local folder using AWS CLI with removing irrelevant files in local folder if required (will require more wide Policy) :***
+***Sync S3 storage to tge local folder using AWS CLI with removing irrelevant files in local folder if required (will require more wide Policy):***
 
     aws s3 sync s3://k8s-backups-home . --delete
+
+***Uninstall Velero from the K8s cluster:***
+
+    velero uninstall
+
+
